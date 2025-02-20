@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import es.uvigo.esei.daa.entities.Person;
+import es.uvigo.esei.daa.entities.Pet;
 
 /**
  * DAO class for the {@link Person} entities.
@@ -121,6 +122,68 @@ public class PeopleDAO extends DAO {
 			throw new DAOException(e);
 		}
 	}
+
+	public Person add(String name, String surname, Pet pet) throws DAOException, IllegalArgumentException {
+		
+	if (name == null || surname == null || pet == null) {
+		throw new IllegalArgumentException("name, surname, and pet can't be null");
+	}
+
+	try (Connection conn = this.getConnection()) {
+		// Deshabilitar autocommit para transacción
+		conn.setAutoCommit(false);
+		
+		try {
+			// Insertar persona
+			final String personQuery = "INSERT INTO people VALUES(null, ?, ?)";
+			int personId;
+			
+			try (PreparedStatement personStmt = conn.prepareStatement(personQuery, Statement.RETURN_GENERATED_KEYS)) {
+				personStmt.setString(1, name);
+				personStmt.setString(2, surname);
+				
+				if (personStmt.executeUpdate() != 1) {
+					throw new SQLException("Error inserting person");
+				}
+				
+				try (ResultSet resultKeys = personStmt.getGeneratedKeys()) {
+					if (resultKeys.next()) {
+						personId = resultKeys.getInt(1);
+					} else {
+						throw new SQLException("Error retrieving inserted person id");
+					}
+				}
+			}
+			
+			// Insertar mascota asociada a la persona
+			final String petQuery = "INSERT INTO pets VALUES(null, ?, ?, ?)";
+			
+			try (PreparedStatement petStmt = conn.prepareStatement(petQuery)) {
+				petStmt.setString(1, pet.getName());
+				petStmt.setString(2, pet.getType());
+				petStmt.setInt(3, personId);
+				
+				if (petStmt.executeUpdate() != 1) {
+					throw new SQLException("Error inserting pet");
+				}
+			}
+			
+			// Confirmar transacción
+			conn.commit();
+			return new Person(personId, name, surname);
+		} catch (SQLException e) {
+			conn.rollback(); // Revertir cambios en caso de error
+			LOG.log(Level.SEVERE, "Transaction failed, rolling back", e);
+			throw new DAOException(e);
+		} finally {
+			conn.setAutoCommit(true); // Restaurar autocommit
+		}
+	} catch (SQLException e) {
+		LOG.log(Level.SEVERE, "Error adding a person and pet", e);
+		throw new DAOException(e);
+	}
+	}
+
 	
 	/**
 	 * Modifies a person previously persisted in the system. The person will be

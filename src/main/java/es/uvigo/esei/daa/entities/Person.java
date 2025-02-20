@@ -11,6 +11,7 @@ public class Person {
 	private int id;
 	private String name;
 	private String surname;
+	private Pet pet;
 	
 	// Constructor needed for the JSON conversion
 	Person() {}
@@ -21,11 +22,20 @@ public class Person {
 	 * @param id identifier of the person.
 	 * @param name name of the person.
 	 * @param surname surname of the person.
+	 * @param pet pet of the person
 	 */
 	public Person(int id, String name, String surname) {
 		this.id = id;
 		this.setName(name);
 		this.setSurname(surname);
+		this.pet=null;
+	}
+
+	public Person(int id, String name, String surname,Pet pet) {
+		this.id = id;
+		this.setName(name);
+		this.setSurname(surname);
+		this.pet=pet;
 	}
 	
 	/**
@@ -73,6 +83,14 @@ public class Person {
 	 */
 	public void setSurname(String surname) {
 		this.surname = requireNonNull(surname, "Surname can't be null");
+	}
+
+	public Pet getPet(){
+		return pet;
+	}
+
+	public void setPet(Pet pet){
+		this.pet=pet;
 	}
 
 	@Override

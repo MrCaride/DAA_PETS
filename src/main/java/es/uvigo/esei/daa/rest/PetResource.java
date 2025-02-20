@@ -2,11 +2,20 @@ package es.uvigo.esei.daa.rest;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.*;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import es.uvigo.esei.daa.dao.DAOException;
-import es.uvigo.esei.daa.dao.PetsDAO;
+import es.uvigo.esei.daa.dao.PetDAO;
 import es.uvigo.esei.daa.entities.Pet;
 
 /**
@@ -18,29 +27,31 @@ import es.uvigo.esei.daa.entities.Pet;
 @Produces(MediaType.APPLICATION_JSON)
 public class PetResource {
     private final static Logger LOG = Logger.getLogger(PetResource.class.getName());
-    private final PetsDAO dao;
+
+    private final PetDAO dao;
 
     /**
      * Constructs a new instance of {@link PetResource}.
      */
     public PetResource() {
-        this(new PetsDAO());
+        this(new PetDAO());
     }
 
     // Needed for testing purposes
-    PetResource(PetsDAO dao) {
+    PetResource(PetDAO dao) {
         this.dao = dao;
     }
 
     /**
      * Returns a pet with the provided identifier.
-     * 
+     *
      * @param id the identifier of the pet to retrieve.
-     * @return a 200 OK response with a pet that has the provided identifier.
+     * @return a 200 OK response with the pet details. If the pet does not exist,
+     * a 400 Bad Request response is returned. If an error happens, a 500 Internal Server Error is returned.
      */
     @GET
     @Path("/{id}")
-    public Response get(@PathParam("id") String id) {
+    public Response get(@PathParam("id") int id) {
         try {
             final Pet pet = this.dao.get(id);
             return Response.ok(pet).build();
@@ -54,7 +65,9 @@ public class PetResource {
     }
 
     /**
-     * Returns the complete list of pets stored in the system.
+     * Returns the complete list of pets.
+     *
+     * @return a 200 OK response with the list of pets. If an error occurs, a 500 Internal Server Error is returned.
      */
     @GET
     public Response list() {
@@ -67,13 +80,22 @@ public class PetResource {
     }
 
     /**
-     * Creates a new pet in the system.
+     * Adds a new pet to the system.
+     *
+     * @param name the name of the pet.
+     * @param type the type of the pet.
+     * @param ownerId the identifier of the pet's owner.
+     * @return a 200 OK response with the created pet. If invalid data is provided,
+     * a 400 Bad Request response is returned. If an error happens, a 500 Internal Server Error is returned.
      */
     @POST
-    public Response add(@FormParam("petId") String petId, @FormParam("name") String name, 
-                        @FormParam("type") String type, @FormParam("ownerId") int ownerId) {
+    public Response add(
+        @FormParam("name") String name,
+        @FormParam("type") String type,
+        @FormParam("ownerId") int ownerId
+    ) {
         try {
-            final Pet newPet = this.dao.add(petId, name, type, ownerId);
+            final Pet newPet = this.dao.add(name, type, ownerId);
             return Response.ok(newPet).build();
         } catch (IllegalArgumentException iae) {
             LOG.log(Level.FINE, "Invalid pet data in add method", iae);
@@ -85,19 +107,30 @@ public class PetResource {
     }
 
     /**
-     * Modifies the data of a pet.
+     * Modifies an existing pet.
+     *
+     * @param id the identifier of the pet to modify.
+     * @param name the new name of the pet.
+     * @param type the new type of the pet.
+     * @param ownerId the new owner ID of the pet.
+     * @return a 200 OK response with the modified pet. If the pet does not exist or invalid data is provided,
+     * a 400 Bad Request response is returned. If an error happens, a 500 Internal Server Error is returned.
      */
     @PUT
     @Path("/{id}")
-    public Response modify(@PathParam("id") String id, @FormParam("name") String name, 
-                           @FormParam("type") String type, @FormParam("ownerId") int ownerId) {
+    public Response modify(
+        @PathParam("id") int id,
+        @FormParam("name") String name,
+        @FormParam("type") String type,
+        @FormParam("ownerId") int ownerId
+    ) {
         try {
-            final Pet modifiedPet = new Pet(id, name, type, ownerId);
-            this.dao.modify(modifiedPet);
+            final Pet modifiedPet = new Pet(id,name, type, ownerId);
+            this.dao.add(name, type, ownerId);
             return Response.ok(modifiedPet).build();
-        } catch (NullPointerException | IllegalArgumentException e) {
-            LOG.log(Level.FINE, "Invalid pet data in modify method", e);
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (IllegalArgumentException iae) {
+            LOG.log(Level.FINE, "Invalid pet id in modify method", iae);
+            return Response.status(Response.Status.BAD_REQUEST).entity(iae.getMessage()).build();
         } catch (DAOException e) {
             LOG.log(Level.SEVERE, "Error modifying a pet", e);
             return Response.serverError().entity(e.getMessage()).build();
@@ -106,10 +139,14 @@ public class PetResource {
 
     /**
      * Deletes a pet from the system.
+     *
+     * @param id the identifier of the pet to delete.
+     * @return a 200 OK response with the deleted pet ID. If the pet does not exist,
+     * a 400 Bad Request response is returned. If an error happens, a 500 Internal Server Error is returned.
      */
     @DELETE
     @Path("/{id}")
-    public Response delete(@PathParam("id") String id) {
+    public Response delete(@PathParam("id") int id) {
         try {
             this.dao.delete(id);
             return Response.ok(id).build();
