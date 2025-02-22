@@ -8,83 +8,49 @@ import static java.util.Objects.requireNonNull;
  * @author DRM
  */
 public class Pet {
-	private int pet_id;
-	private String name;
-	private String type;
-    private int owner_id;
-
-	
-	// Constructor needed for the JSON conversion
-	Pet() {}
-	
-	/**
-	 * Constructs a new instance of {@link Pet}.
-	 *
-	 * @param pet_id identifier of the pet.
-	 * @param name name of the pet.
-	 * @param type surname of the pet.
-	 */
-	public Pet(int pet_id, String name, String surname,int owner_id) {
-		this.pet_id = pet_id;
-		this.setName(name);
-		this.setType(type);
-        this.setOwnerId(owner_id);
-	}
-	
-	/**
-	 * Returns the identifier of the person.
-	 * 
-	 * @return the identifier of the person.
-	 */
-	public int getId() {
-		return pet_id;
-	}
-
-	/**
-	 * Returns the name of the pet.
-	 * 
-	 * @return the name of the pet.
-	 */
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * Set the name of this pet.
-	 * 
-	 * @param name the new name of the pet.
-	 * @throws NullPointerException if the {@code name} is {@code null}.
-	 */
-	public void setName(String name) {
-		this.name = requireNonNull(name, "Name can't be null");
-	}
-
-	/**
-	 * Returns the type of the pet.
-	 * 
-	 * @return the type of the pet.
-	 */
-	public String getType() {
-		return type;
-	}
-
-	/**
-	 * Set the surname of this person.
-	 * 
-	 * @param type the new surname of the pet.
-	 * @throws NullPointerException if the {@code type} is {@code null}.
-	 */
-	public void setType(String type) {
-		this.type = requireNonNull(type, "Type can't be null");
-	}
-
-	public int getOwnerId() {
+    private int pet_id;
+    private String name;
+    private String type;
+    private int owner_id;  // Cambiar de ownerId a owner_id para que coincida con JSON
+    
+    // Constructor sin argumentos necesario para la conversión JSON
+    Pet() {}
+    
+    public Pet(int pet_id, String name, String type, int owner_id) {
+        this.pet_id = pet_id;
+        this.setName(name != null ? name : "Unknown");
+        this.setType(type != null ? type : "Unknown");
+        this.owner_id = owner_id;  // Usar owner_id en lugar de setOwnerId
+    }
+    
+    // Getters y setters con los nombres correctos
+    public int getId() {
+        return pet_id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = requireNonNull(name, "Name can't be null");
+    }
+    
+    public String getType() {
+        return type;
+    }
+    
+    public void setType(String type) {
+        this.type = requireNonNull(type, "Type can't be null");
+    }
+    
+    public int getOwner_id() {  // Cambiar de getOwnerId a getOwner_id
         return owner_id;
     }
-
-    public void setOwnerId(int owner_id) {
-		this.owner_id=owner_id;
-	}
+    
+    public void setOwner_id(int owner_id) {  // Cambiar de setOwnerId a setOwner_id
+        this.owner_id = owner_id;
+    }
 
 
 	@Override

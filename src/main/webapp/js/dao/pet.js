@@ -1,5 +1,6 @@
 var PetDAO = (function() {
     var resourcePath = "rest/pets/";
+    
     var requestByAjax = function(data, done, fail, always) {
         done = typeof done !== 'undefined' ? done : function() {};
         fail = typeof fail !== 'undefined' ? fail : function() {};
@@ -12,40 +13,81 @@ var PetDAO = (function() {
             };
         }
 
-        $.ajax(data).done(done).fail(fail).always(always);
+        // Añadir headers específicos para JSON
+        if (data.type === 'POST' || data.type === 'PUT') {
+            data.headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Log para depuración
+        console.log('Making request:', {
+            url: data.url,
+            type: data.type,
+            data: data.data,
+            headers: data.headers
+        });
+
+        $.ajax(data)
+            .done(function(response) {
+                console.log('Success:', response);
+                done(response);
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Error:', {
+                    status: jqXHR.status,
+                    textStatus: textStatus,
+                    error: errorThrown,
+                    response: jqXHR.responseText
+                });
+                fail(jqXHR, textStatus, errorThrown);
+            })
+            .always(always);
     };
 
     function PetDAO() {
-        this.listPets = function(done, fail, always) {
+        this.listPetsByOwner = function(ownerId, done, fail, always) {
             requestByAjax({
-                url: resourcePath,
+                url: resourcePath + "owner/" + ownerId,
                 type: 'GET'
             }, done, fail, always);
         };
-
+        
         this.addPet = function(pet, done, fail, always) {
+            // Asegurarse de que los datos están en el formato correcto
+            var petData = {
+                name: pet.name,
+                type: pet.type,
+                owner_id: pet.owner_id
+            };
+
             requestByAjax({
                 url: resourcePath,
                 type: 'POST',
-                data: pet
+                data: JSON.stringify(petData),
+                processData: false
             }, done, fail, always);
         };
-
+        
         this.modifyPet = function(pet, done, fail, always) {
             requestByAjax({
-                url: resourcePath + pet.id,
+                url: resourcePath + pet.pet_id,
                 type: 'PUT',
-                data: pet
+                data: JSON.stringify(pet),
+                processData: false
             }, done, fail, always);
         };
-
-        this.deletePet = function(id, done, fail, always) {
+        
+        this.deletePet = function(pet_id, done, fail) {
             requestByAjax({
-                url: resourcePath + id,
+                url: resourcePath +  pet_id,  
                 type: 'DELETE',
-            }, done, fail, always);
+                contentType: 'application/json'
+            }, done, fail);
         };
+        
     }
-
+    
     return PetDAO;
 })();

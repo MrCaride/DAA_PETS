@@ -2,6 +2,8 @@ package es.uvigo.esei.daa.entities;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
+
 /**
  * An entity that represents a person.
  * 
@@ -11,7 +13,6 @@ public class Person {
 	private int id;
 	private String name;
 	private String surname;
-	private Pet pet;
 	
 	// Constructor needed for the JSON conversion
 	Person() {}
@@ -28,15 +29,9 @@ public class Person {
 		this.id = id;
 		this.setName(name);
 		this.setSurname(surname);
-		this.pet=null;
+
 	}
 
-	public Person(int id, String name, String surname,Pet pet) {
-		this.id = id;
-		this.setName(name);
-		this.setSurname(surname);
-		this.pet=pet;
-	}
 	
 	/**
 	 * Returns the identifier of the person.
@@ -85,13 +80,6 @@ public class Person {
 		this.surname = requireNonNull(surname, "Surname can't be null");
 	}
 
-	public Pet getPet(){
-		return pet;
-	}
-
-	public void setPet(Pet pet){
-		this.pet=pet;
-	}
 
 	@Override
 	public int hashCode() {

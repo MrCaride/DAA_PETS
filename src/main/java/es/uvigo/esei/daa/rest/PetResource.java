@@ -3,6 +3,7 @@ package es.uvigo.esei.daa.rest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -79,6 +80,17 @@ public class PetResource {
         }
     }
 
+    @GET
+    @Path("/owner/{id}")
+    public Response listByOwner(@PathParam("id") int ownerId) {
+        try {
+            return Response.ok(dao.listPetsByOwner(ownerId)).build();
+        } catch (DAOException e) {
+            LOG.log(Level.SEVERE, "Error listing pets by owner", e);
+            return Response.serverError().build();
+        }
+    }
+
     /**
      * Adds a new pet to the system.
      *
@@ -89,20 +101,29 @@ public class PetResource {
      * a 400 Bad Request response is returned. If an error happens, a 500 Internal Server Error is returned.
      */
     @POST
-    public Response add(
-        @FormParam("name") String name,
-        @FormParam("type") String type,
-        @FormParam("ownerId") int ownerId
-    ) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response add(Pet pet) {
         try {
-            final Pet newPet = this.dao.add(name, type, ownerId);
+            LOG.log(Level.INFO, "Received request to add pet: name=" + pet.getName() + 
+                ", type=" + pet.getType() + ", ownerId=" + pet.getOwner_id());
+            
+            if (pet.getName() == null || pet.getType() == null) {
+                LOG.log(Level.WARNING, "Invalid pet data: name or type is null");
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Name and type are required").build();
+            }
+    
+            final Pet newPet = this.dao.add(pet.getName(), pet.getType(), pet.getOwner_id());
+            LOG.log(Level.INFO, "Successfully added pet with ID: " + newPet.getId());
             return Response.ok(newPet).build();
         } catch (IllegalArgumentException iae) {
-            LOG.log(Level.FINE, "Invalid pet data in add method", iae);
-            return Response.status(Response.Status.BAD_REQUEST).entity(iae.getMessage()).build();
+            LOG.log(Level.WARNING, "Invalid pet data: " + iae.getMessage(), iae);
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity(iae.getMessage()).build();
         } catch (DAOException e) {
-            LOG.log(Level.SEVERE, "Error adding a pet", e);
-            return Response.serverError().entity(e.getMessage()).build();
+            LOG.log(Level.SEVERE, "Error adding pet: " + e.getMessage(), e);
+            return Response.serverError()
+                .entity("Error adding pet: " + e.getMessage()).build();
         }
     }
 
@@ -118,18 +139,18 @@ public class PetResource {
      */
     @PUT
     @Path("/{id}")
-    public Response modify(
-        @PathParam("id") int id,
-        @FormParam("name") String name,
-        @FormParam("type") String type,
-        @FormParam("ownerId") int ownerId
-    ) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response modify(@PathParam("id") int id, Pet pet) {
         try {
-            final Pet modifiedPet = new Pet(id,name, type, ownerId);
-            this.dao.add(name, type, ownerId);
-            return Response.ok(modifiedPet).build();
+            if (pet.getId() != id) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Path id and pet id don't match").build();
+            }
+            
+            this.dao.modify(pet);
+            return Response.ok(pet).build();
         } catch (IllegalArgumentException iae) {
-            LOG.log(Level.FINE, "Invalid pet id in modify method", iae);
+            LOG.log(Level.FINE, "Invalid pet data in modify method", iae);
             return Response.status(Response.Status.BAD_REQUEST).entity(iae.getMessage()).build();
         } catch (DAOException e) {
             LOG.log(Level.SEVERE, "Error modifying a pet", e);

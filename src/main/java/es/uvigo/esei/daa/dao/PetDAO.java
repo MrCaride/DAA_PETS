@@ -56,45 +56,66 @@ public class PetDAO extends DAO {
         }
     }
 
+    public List<Pet> listPetsByOwner(int idowner) throws DAOException {
+        try (final Connection conn = this.getConnection()) {
+            final String query = "SELECT * FROM pets WHERE owner_id = ?";
+    
+            try (final PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setInt(1, idowner);
+                LOG.log(Level.INFO, "Executing query: " + query + " with owner_id: " + idowner);
+    
+                try (final ResultSet result = statement.executeQuery()) {
+                    final List<Pet> pets = new LinkedList<>();
+    
+                    while (result.next()) {
+                        pets.add(rowToEntity(result));
+                    }
+                    LOG.log(Level.INFO, "Found " + pets.size() + " pets for owner " + idowner);
+                    return pets;
+                }
+            }
+        } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Error listing pets for owner " + idowner, e);
+            throw new DAOException(e);
+        }
+    }
+    
+
     public Pet add(String name, String type, int ownerId) throws DAOException, IllegalArgumentException {
         if (name == null || type == null) {
             throw new IllegalArgumentException("name and type can't be null");
         }
-
+    
         try (Connection conn = this.getConnection()) {
-
-            // final String ownerCheckQuery = "SELECT id FROM people WHERE id = ?";
-            // try (PreparedStatement ownerCheckStmt = conn.prepareStatement(ownerCheckQuery)) {
-            //     ownerCheckStmt.setInt(1, Pet.getOwnerId());
-            //     try (ResultSet ownerResult = ownerCheckStmt.executeQuery()) {
-            //         if (!ownerResult.next()) {
-            //             throw new IllegalArgumentException("Owner ID does not exist");
-            //         }
-            //     }
-            // }
-
-
-            final String query = "INSERT INTO pets VALUES(null, ?, ?, ?)";
-
+            // Especificar explícitamente las columnas en el INSERT
+            final String query = "INSERT INTO pets (pet_id, name, type, owner_id) VALUES (null, ?, ?, ?)";
+            
+            LOG.log(Level.INFO, "Executing query: " + query + " with params: name=" + name + ", type=" + type + ", ownerId=" + ownerId);
+    
             try (PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+                // Establecer los parámetros en el orden correcto
                 statement.setString(1, name);
                 statement.setString(2, type);
                 statement.setInt(3, ownerId);
-
+    
                 if (statement.executeUpdate() == 1) {
                     try (ResultSet resultKeys = statement.getGeneratedKeys()) {
                         if (resultKeys.next()) {
-                            return new Pet(resultKeys.getInt(1), name, type, ownerId);
+                            int newPetId = resultKeys.getInt(1);
+                            LOG.log(Level.INFO, "Successfully inserted pet with ID: " + newPetId);
+                            return new Pet(newPetId, name, type, ownerId);
                         } else {
+                            LOG.log(Level.SEVERE, "No ID was generated for the new pet");
                             throw new SQLException("Error retrieving inserted pet id");
                         }
                     }
                 } else {
+                    LOG.log(Level.SEVERE, "Insert statement did not modify any rows");
                     throw new SQLException("Error inserting pet");
                 }
             }
         } catch (SQLException e) {
-            LOG.log(Level.SEVERE, "Error adding a pet", e);
+            LOG.log(Level.SEVERE, "Error adding a pet: " + e.getMessage(), e);
             throw new DAOException(e);
         }
     }
@@ -110,7 +131,7 @@ public class PetDAO extends DAO {
             try (PreparedStatement statement = conn.prepareStatement(query)) {
                 statement.setString(1, pet.getName());
                 statement.setString(2, pet.getType());
-                statement.setInt(3, pet.getOwnerId());
+                statement.setInt(3, pet.getOwner_id());
                 statement.setInt(4, pet.getId());
 
                 if (statement.executeUpdate() != 1) {
@@ -141,11 +162,18 @@ public class PetDAO extends DAO {
     }
 
     private Pet rowToEntity(ResultSet row) throws SQLException {
-        return new Pet(
-            row.getInt("pet_id"),
-            row.getString("name"),
-            row.getString("type"),
-            row.getInt("owner_id")
-        );
+        String name = row.getString("name");
+        String type = row.getString("type");
+        int petId = row.getInt("pet_id");
+        int ownerId = row.getInt("owner_id");
+        
+        LOG.log(Level.INFO, "Converting row to Pet: id=" + petId + 
+            ", name=" + name + ", type=" + type + ", ownerId=" + ownerId);
+        
+        if (type == null) {
+            type = "Unknown"; // O maneja el caso null de otra manera
+        }
+        
+        return new Pet(petId, name, type, ownerId);
     }
 }
