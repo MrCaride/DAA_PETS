@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 
 import es.uvigo.esei.daa.dao.DAOException;
 import es.uvigo.esei.daa.dao.PetDAO;
+import es.uvigo.esei.daa.entities.Person;
 import es.uvigo.esei.daa.entities.Pet;
 
 /**
@@ -139,24 +140,39 @@ public class PetResource {
      */
     @PUT
     @Path("/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response modify(@PathParam("id") int id, Pet pet) {
-        try {
-            if (pet.getId() != id) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Path id and pet id don't match").build();
-            }
-            
-            this.dao.modify(pet);
-            return Response.ok(pet).build();
-        } catch (IllegalArgumentException iae) {
-            LOG.log(Level.FINE, "Invalid pet data in modify method", iae);
-            return Response.status(Response.Status.BAD_REQUEST).entity(iae.getMessage()).build();
-        } catch (DAOException e) {
-            LOG.log(Level.SEVERE, "Error modifying a pet", e);
-            return Response.serverError().entity(e.getMessage()).build();
-        }
-    }
+	public Response modify(
+		@PathParam("id") int id,  
+		@FormParam("name") String name, 
+		@FormParam("type") String type,
+        @FormParam("owner_id") int owner_id
+	) {
+		try {
+			final Pet modifiedPet = new Pet(id, name, type, owner_id);
+			this.dao.modify(modifiedPet);
+			
+			return Response.ok(modifiedPet).build();
+		} catch (NullPointerException npe) {
+			final String message = String.format("Invalid data for person (name: %s, surname: %s)", name, type);
+			
+			LOG.log(Level.FINE, message);
+			
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(message)
+			.build();
+		} catch (IllegalArgumentException iae) {
+			LOG.log(Level.FINE, "Invalid pet id in modify method", iae);
+			
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(iae.getMessage())
+			.build();
+		} catch (DAOException e) {
+			LOG.log(Level.SEVERE, "Error modifying a pet", e);
+			
+			return Response.serverError()
+				.entity(e.getMessage())
+			.build();
+		}
+	}
 
     /**
      * Deletes a pet from the system.
