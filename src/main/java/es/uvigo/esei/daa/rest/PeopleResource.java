@@ -1,8 +1,10 @@
 package es.uvigo.esei.daa.rest;
 
+import java.security.Principal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -11,8 +13,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import es.uvigo.esei.daa.dao.DAOException;
 import es.uvigo.esei.daa.dao.PeopleDAO;
@@ -21,7 +25,6 @@ import es.uvigo.esei.daa.entities.Person;
 /**
  * REST resource for managing people.
  * 
- * @author DRM
  */
 @Path("/people")
 @Produces(MediaType.APPLICATION_JSON)
@@ -54,6 +57,7 @@ public class PeopleResource {
 	 */
 	@GET
 	@Path("/{id}")
+	@RolesAllowed({"ADMIN", "USER"})
 	public Response get(
 		@PathParam("id") int id
 	) {
@@ -84,12 +88,36 @@ public class PeopleResource {
 	 * Server Error response with an error message will be returned.
 	 */
 	@GET
-	public Response list() {
+	@RolesAllowed({"ADMIN", "USER"})
+	public Response list(@Context SecurityContext securityContext) {
 		try {
-			return Response.ok(this.dao.list()).build();
+			// Obtener el rol del usuario actual
+			String role = getCurrentUserRole(securityContext);
+
+			if ("ADMIN".equals(role)) {
+				// Si el usuario es admin, devolver todas las personas
+				return Response.ok(this.dao.list()).build();
+			} else if ("USER".equals(role)) {
+				// Si el usuario es user, devolver solo las personas creadas por él
+				Principal principal = securityContext.getUserPrincipal();
+				String username = principal.getName();
+				return Response.ok(this.dao.listByCreator(username)).build();
+			} else {
+				return Response.status(Response.Status.FORBIDDEN).build();
+			}
 		} catch (DAOException e) {
 			LOG.log(Level.SEVERE, "Error listing people", e);
 			return Response.serverError().entity(e.getMessage()).build();
+		}
+	}
+
+	private String getCurrentUserRole(SecurityContext securityContext) {
+		if (securityContext.isUserInRole("ADMIN")) {
+			return "ADMIN";
+		} else if (securityContext.isUserInRole("USER")) {
+			return "USER";
+		} else {
+			return null;
 		}
 	}
 
@@ -98,6 +126,7 @@ public class PeopleResource {
 	 * 
 	 * @param name the name of the new person.
 	 * @param surname the surname of the new person.
+	 * @param createdBy the creator of the new person.
 	 * @return a 200 OK response with a person that has been created. If the
 	 * name or the surname are not provided, a 400 Bad Request response with an
 	 * error message will be returned. If an error happens while retrieving the
@@ -105,12 +134,16 @@ public class PeopleResource {
 	 * returned.
 	 */
 	@POST
+	@RolesAllowed({"ADMIN", "USER"})
 	public Response add(
 		@FormParam("name") String name, 
-		@FormParam("surname") String surname
+		@FormParam("surname") String surname,
+		@Context SecurityContext securityContext
 	) {
 		try {
-			final Person newPerson = this.dao.add(name, surname);
+			Principal principal = securityContext.getUserPrincipal();
+			String username = principal.getName();
+			final Person newPerson = this.dao.add(name, surname, username);
 			
 			return Response.ok(newPerson).build();
 		} catch (IllegalArgumentException iae) {
@@ -134,6 +167,7 @@ public class PeopleResource {
 	 * @param id identifier of the person to modify.
 	 * @param name the new name of the person.
 	 * @param surname the new surname of the person.
+	 * @param createdBy the creator of the person.
 	 * @return a 200 OK response with a person that has been modified. If the
 	 * identifier does not corresponds with any user or the name or surname are
 	 * not provided, a 400 Bad Request response with an error message will be
@@ -145,10 +179,11 @@ public class PeopleResource {
 	public Response modify(
 		@PathParam("id") int id, 
 		@FormParam("name") String name, 
-		@FormParam("surname") String surname
+		@FormParam("surname") String surname,
+		@FormParam("createdBy") String createdBy
 	) {
 		try {
-			final Person modifiedPerson = new Person(id, name, surname);
+			final Person modifiedPerson = new Person(id, name, surname, createdBy);
 			this.dao.modify(modifiedPerson);
 			
 			return Response.ok(modifiedPerson).build();

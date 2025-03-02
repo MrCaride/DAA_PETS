@@ -79,6 +79,29 @@ public class PeopleDAO extends DAO {
 			throw new DAOException(e);
 		}
 	}
+
+	public List<Person> listByCreator(String createdBy) throws DAOException {
+		try (final Connection conn = this.getConnection()) {
+			final String query = "SELECT * FROM people WHERE login_creator=?";
+			
+			try (final PreparedStatement statement = conn.prepareStatement(query)) {
+				statement.setString(1, createdBy);
+				
+				try (final ResultSet result = statement.executeQuery()) {
+					final List<Person> people = new LinkedList<>();
+					
+					while (result.next()) {
+						people.add(rowToEntity(result));
+					}
+					
+					return people;
+				}
+			}
+		} catch (SQLException e) {
+			LOG.log(Level.SEVERE, "Error listing people by creator", e);
+			throw new DAOException(e);
+		}
+	}
 	
 	/**
 	 * Persists a new person in the system. An identifier will be assigned
@@ -90,23 +113,23 @@ public class PeopleDAO extends DAO {
 	 * @throws DAOException if an error happens while persisting the new person.
 	 * @throws IllegalArgumentException if the name or surname are {@code null}.
 	 */
-	public Person add(String name, String surname)
-	throws DAOException, IllegalArgumentException {
-		if (name == null || surname == null) {
-			throw new IllegalArgumentException("name and surname can't be null");
+	public Person add(String name, String surname, String loginCreator) throws DAOException, IllegalArgumentException {
+		if (name == null || surname == null || loginCreator == null) {
+			throw new IllegalArgumentException("name, surname and loginCreator can't be null");
 		}
 		
 		try (Connection conn = this.getConnection()) {
-			final String query = "INSERT INTO people VALUES(null, ?, ?)";
+			final String query = "INSERT INTO people (name, surname, login_creator) VALUES (?, ?, ?)";
 			
 			try (PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 				statement.setString(1, name);
 				statement.setString(2, surname);
+				statement.setString(3, loginCreator);
 				
 				if (statement.executeUpdate() == 1) {
 					try (ResultSet resultKeys = statement.getGeneratedKeys()) {
 						if (resultKeys.next()) {
-							return new Person(resultKeys.getInt(1), name, surname);
+							return new Person(resultKeys.getInt(1), name, surname, loginCreator);
 						} else {
 							LOG.log(Level.SEVERE, "Error retrieving inserted id");
 							throw new SQLException("Error retrieving inserted id");

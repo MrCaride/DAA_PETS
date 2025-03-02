@@ -16,10 +16,14 @@ var PeopleDAO = (function() {
     };
 
     function PeopleDAO() {
-	this.listPeople = function(done, fail, always) {
+	this.listPeople = function(done, fail, always, createdBy) {
+	    let url = resourcePath;
+	    if (createdBy) {
+		url += "?createdBy=" + createdBy;
+	    }
 	    requestByAjax({
-		url : resourcePath,
-		type : 'GET'
+		url: url,
+		type: 'GET'
 	    }, done, fail, always);
 	};
 

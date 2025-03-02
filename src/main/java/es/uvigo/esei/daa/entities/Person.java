@@ -13,6 +13,7 @@ public class Person {
 	private int id;
 	private String name;
 	private String surname;
+	private String login_creator;
 	
 	// Constructor needed for the JSON conversion
 	Person() {}
@@ -29,6 +30,15 @@ public class Person {
 		this.id = id;
 		this.setName(name);
 		this.setSurname(surname);
+		this.login_creator = "system";
+
+	}
+
+	public Person(int id, String name, String surname,String login_creator) {
+		this.id = id;
+		this.setName(name);
+		this.setSurname(surname);
+		this.login_creator = login_creator;
 
 	}
 
@@ -78,6 +88,14 @@ public class Person {
 	 */
 	public void setSurname(String surname) {
 		this.surname = requireNonNull(surname, "Surname can't be null");
+	}
+
+	public String getLoginCreator() {
+		return login_creator;
+	}
+
+	public void setLoginCreator(String login_creator) {
+		this.login_creator = login_creator;
 	}
 
 

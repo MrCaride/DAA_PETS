@@ -70,6 +70,6 @@
   
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>DAAExample</realm-name>
+    <realm-name>Application Realm</realm-name>
   </login-config>
 </web-app>

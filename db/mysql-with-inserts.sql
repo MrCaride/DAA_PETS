@@ -5,7 +5,11 @@ CREATE TABLE `daaexample`.`people` (
 	`id` int NOT NULL AUTO_INCREMENT,
 	`name` varchar(50) NOT NULL,
 	`surname` varchar(100) NOT NULL,
-	PRIMARY KEY (`id`)
+	`login` varchar(100) NOT NULL,
+	`login_creator` varchar(100) NOT NULL,
+	PRIMARY KEY (`id`),
+	CONSTRAINT fk_user FOREIGN KEY (login_creator) REFERENCES users(login) ON DELETE CASCADE ON UPDATE CASCADE
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `daaexample`.`users` (
@@ -15,17 +19,34 @@ CREATE TABLE `daaexample`.`users` (
 	PRIMARY KEY (`login`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE pets (
+    `pet_id` INT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(64) NOT NULL,
+    `type` VARCHAR(10) NOT NULL,
+    `owner_id` INT NOT NULL,
+    PRIMARY KEY (pet_id),
+    CONSTRAINT fk_owner FOREIGN KEY (owner_id) REFERENCES people(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 CREATE USER IF NOT EXISTS 'daa'@'localhost' IDENTIFIED WITH mysql_native_password BY 'daa';
 GRANT ALL ON `daaexample`.* TO 'daa'@'localhost';
 
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Antón','Pérez');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Manuel','Martínez');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Laura','Reboredo');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Perico','Palotes');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Ana','María');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'María','Nuevo');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Alba','Fernández');
-INSERT INTO `daaexample`.`people` (`id`,`name`,`surname`) VALUES (0,'Asunción','Jiménez');
+-- Insertar datos en la tabla people
+INSERT INTO people (name, surname, login_creator) VALUES 
+('Juan', 'Pérez', 'juan_admin'),
+('María', 'Gómez', 'maria_creator'),
+('Carlos', 'Fernández', 'carlos_dev'),
+('Ana', 'López', 'ana_manager'),
+('Pedro', 'Martínez', 'pedro_root');
+
+-- Insertar datos en la tabla pets con valores completos y owner_id referenciando a people.id
+INSERT INTO pets (pet_id, name, type, owner_id) VALUES 
+(1, 'Firulais', 'Perro', 19),
+(2, 'Michi', 'Gato', 20),
+(3, 'Pepe', 'Loro', 21),
+(4, 'Nemo', 'Pez', 22),
+(5, 'Bunny', 'Conejo', 23);
 
 -- The password for each user is its login suffixed with "pass". For example, user "admin" has the password "adminpass".
 INSERT INTO `daaexample`.`users` (`login`,`password`,`role`)
