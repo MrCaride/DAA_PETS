@@ -176,6 +176,7 @@ public class PeopleResource {
 	 */
 	@PUT
 	@Path("/{id}")
+	@RolesAllowed({"ADMIN", "USER"})
 	public Response modify(
 		@PathParam("id") int id, 
 		@FormParam("name") String name, 
@@ -222,6 +223,7 @@ public class PeopleResource {
 	 */
 	@DELETE
 	@Path("/{id}")
+	@RolesAllowed({"ADMIN", "USER"})
 	public Response delete(
 		@PathParam("id") int id
 	) {
