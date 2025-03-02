@@ -11,19 +11,19 @@ public class Pet {
     private int pet_id;
     private String name;
     private String type;
-    private int owner_id;  // Cambiar de ownerId a owner_id para que coincida con JSON
+    private int owner_id;  
     
-    // Constructor sin argumentos necesario para la conversión JSON
+    
     Pet() {}
     
     public Pet(int pet_id, String name, String type, int owner_id) {
         this.pet_id = pet_id;
         this.setName(name != null ? name : "Unknown");
         this.setType(type != null ? type : "Unknown");
-        this.owner_id = owner_id;  // Usar owner_id en lugar de setOwnerId
+        this.owner_id = owner_id;  
     }
     
-    // Getters y setters con los nombres correctos
+    
     public int getId() {
         return pet_id;
     }
@@ -44,11 +44,11 @@ public class Pet {
         this.type = requireNonNull(type, "Type can't be null");
     }
     
-    public int getOwner_id() {  // Cambiar de getOwnerId a getOwner_id
+    public int getOwner_id() {  
         return owner_id;
     }
     
-    public void setOwner_id(int owner_id) {  // Cambiar de setOwnerId a setOwner_id
+    public void setOwner_id(int owner_id) {  
         this.owner_id = owner_id;
     }
 

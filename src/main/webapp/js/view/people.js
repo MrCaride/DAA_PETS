@@ -15,13 +15,11 @@ var PeopleView = (function() {
         insertPeopleList($('#' + listContainerId));
         
         this.init = function() {
-            console.log("Initializing PeopleView"); // Debug log
+            console.log("Initializing PeopleView"); 
             
-            // Obtener el rol del usuario actual
             var role = self.getCurrentUserRole();
 
             if (role === "ADMIN") {
-                // Si el usuario es admin, listar todas las personas
                 dao.listPeople(function(people) {
                     $.each(people, function(key, person) {
                         appendToTable(person);
@@ -30,7 +28,6 @@ var PeopleView = (function() {
                     alert('No ha sido posible acceder al listado de personas.');
                 });
             } else if (role === "USER") {
-                // Si el usuario es user, listar solo las personas creadas por él
                 dao.listPeople(function(people) {
                     $.each(people, function(key, person) {
                         appendToTable(person);
@@ -71,10 +68,7 @@ var PeopleView = (function() {
         };
 
         this.getCurrentUserRole = function() {
-            // Implementar la lógica para obtener el rol del usuario actual
-            // Esto puede variar según la configuración de seguridad de tu aplicación
-            // Por ejemplo, puedes obtener el rol del usuario desde el almacenamiento local
-            return localStorage.getItem('current-user-role'); // Placeholder, reemplazar con la lógica real
+            return localStorage.getItem('current-user-role'); 
         };
 
         this.getCurrentUser = function() {

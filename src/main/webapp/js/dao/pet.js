@@ -49,7 +49,6 @@ var PetDAO = (function() {
         };
         
         this.addPet = function(pet, done, fail, always) {
-            // Solo enviamos los campos necesarios para crear
             const validatedPet = {
                 name: validateAndTrim(pet.name, MAX_LENGTH.name),
                 type: validateAndTrim(pet.type, MAX_LENGTH.type),

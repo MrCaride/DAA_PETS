@@ -156,14 +156,13 @@ public class PeopleDAO extends DAO {
 			conn.setAutoCommit(false);
 			
 			try {
-				// Corregir la consulta SQL usando un parámetro
 				final String petQuery = "INSERT INTO pets VALUES(null, ?, ?, ?)";
 				int petId;
 				
 				try (PreparedStatement petStmt = conn.prepareStatement(petQuery, Statement.RETURN_GENERATED_KEYS)) {
 					petStmt.setString(1, name);
 					petStmt.setString(2, type);
-					petStmt.setInt(3, id);  // Usar el parámetro id correctamente
+					petStmt.setInt(3, id); 
 					
 					if (petStmt.executeUpdate() != 1) {
 						throw new SQLException("Error inserting pet");

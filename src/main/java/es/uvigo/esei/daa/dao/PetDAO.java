@@ -87,13 +87,12 @@ public class PetDAO extends DAO {
         }
     
         try (Connection conn = this.getConnection()) {
-            // Especificar explícitamente las columnas en el INSERT
+
             final String query = "INSERT INTO pets (pet_id, name, type, owner_id) VALUES (null, ?, ?, ?)";
             
             LOG.log(Level.INFO, "Executing query: " + query + " with params: name=" + name + ", type=" + type + ", ownerId=" + ownerId);
     
             try (PreparedStatement statement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-                // Establecer los parámetros en el orden correcto
                 statement.setString(1, name);
                 statement.setString(2, type);
                 statement.setInt(3, ownerId);
@@ -171,7 +170,7 @@ public class PetDAO extends DAO {
             ", name=" + name + ", type=" + type + ", ownerId=" + ownerId);
         
         if (type == null) {
-            type = "Unknown"; // O maneja el caso null de otra manera
+            type = "Unknown"; 
         }
         
         return new Pet(petId, name, type, ownerId);

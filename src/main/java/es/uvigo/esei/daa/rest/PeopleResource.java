@@ -95,13 +95,15 @@ public class PeopleResource {
 			String role = getCurrentUserRole(securityContext);
 
 			if ("ADMIN".equals(role)) {
-				// Si el usuario es admin, devolver todas las personas
+
 				return Response.ok(this.dao.list()).build();
+
 			} else if ("USER".equals(role)) {
-				// Si el usuario es user, devolver solo las personas creadas por él
+
 				Principal principal = securityContext.getUserPrincipal();
 				String username = principal.getName();
 				return Response.ok(this.dao.listByCreator(username)).build();
+				
 			} else {
 				return Response.status(Response.Status.FORBIDDEN).build();
 			}

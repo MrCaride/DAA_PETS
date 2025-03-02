@@ -13,7 +13,6 @@ var PetView = (() => {
         ownerId = personId;
         self = this;
 
-        // Limpiar el contenedor antes de insertar
         $("#" + formContainerId).empty();
 
         insertBackButton($("#" + formContainerId));
@@ -21,7 +20,6 @@ var PetView = (() => {
         insertPetList($("#" + formContainerId));
 
         this.init = function () {
-            // Cargar las mascotas del dueño específico
             dao.listPetsByOwner(
                 ownerId,
                 (pets) => {
@@ -35,14 +33,14 @@ var PetView = (() => {
             );
 
             $(formQuery).submit((event) => {
-                event.preventDefault(); // Evitar el comportamiento por defecto del formulario
+                event.preventDefault(); 
                 var pet = self.getPetInForm();
 
                 if (self.isEditing()) {
                     dao.modifyPet(pet, function(pet) {
                         $("#pet-" + pet.id + " td.name").text(pet.name);
                         $("#pet-" + pet.id + " td.type").text(pet.type);
-                        self.resetForm(); // Asegúrate de que el formulario se limpie después de modificar
+                        self.resetForm(); 
                     },          
                     showErrorMessage, self.enableForm);
                 } else {
@@ -51,7 +49,7 @@ var PetView = (() => {
                         pet,
                         (pet) => {
                             appendToTable(pet);
-                            self.resetForm(); // Asegúrate de que el formulario se limpie después de añadir
+                            self.resetForm(); 
                         },
                         showErrorMessage,
                     );
@@ -62,7 +60,7 @@ var PetView = (() => {
 
             $('input#btnClear').click(() => {
                 console.log("Clear button clicked");
-                self.resetForm(); // Asegúrate de que el formulario se limpie cuando se haga clic en el botón de limpiar
+                self.resetForm(); 
             });
 
             $("#btnBack").click(() => {
@@ -134,7 +132,7 @@ var PetView = (() => {
             console.log("Resetting form");
             $(formQuery)[0].reset();
             $(formQuery + ' input[name="pet_id"]').val('');
-            $("input#btnSubmit").val('Crear'); // Cambia el texto del botón a "Crear"
+            $("input#btnSubmit").val('Crear'); 
         };
     }
 
@@ -183,7 +181,7 @@ var PetView = (() => {
     };
 
     var createPetRow = (pet) => {
-        console.log("Creating row for pet:", pet); // Añade este log
+        console.log("Creating row for pet:", pet); 
         return (
             '<tr id="pet-' + pet.id +'" class="row">\
                 <td class="name col-sm-4">' + pet.name +'</td>\
