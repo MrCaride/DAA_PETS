@@ -16,26 +16,16 @@ var PeopleView = (function() {
         
         this.init = function() {
             console.log("Initializing PeopleView"); 
-            
-            var role = self.getCurrentUserRole();
 
-            if (role === "ADMIN") {
-                dao.listPeople(function(people) {
-                    $.each(people, function(key, person) {
-                        appendToTable(person);
-                    });
-                }, function() {
-                    alert('No ha sido posible acceder al listado de personas.');
+
+            dao.listPeople(function(people) {
+                $.each(people, function(key, person) {
+                    appendToTable(person);
                 });
-            } else if (role === "USER") {
-                dao.listPeople(function(people) {
-                    $.each(people, function(key, person) {
-                        appendToTable(person);
-                    });
-                }, function() {
-                    alert('No ha sido posible acceder al listado de personas.');
-                }, null, self.getCurrentUser());
-            }
+            }, function() {
+                alert('No ha sido posible acceder al listado de personas.');
+            });    
+            
             
             $(formQuery).submit(function(event) {
                 var person = self.getPersonInForm();
@@ -67,13 +57,6 @@ var PeopleView = (function() {
             $('#btnClear').click(this.resetForm);
         };
 
-        this.getCurrentUserRole = function() {
-            return localStorage.getItem('current-user-role'); 
-        };
-
-        this.getCurrentUser = function() {
-            return localStorage.getItem('current-user');
-        };
 
         this.getPersonInForm = function() {
             var form = $(formQuery);
